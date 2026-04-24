@@ -39,7 +39,9 @@ exports.submitDeliverable = async (req, res) => {
     }
 
     // Must be in the group
-    if (!deliverable.group.members.includes(req.user._id)) {
+    const isMember = deliverable.group.members.some(m => m.toString() === req.user._id.toString());
+    const isLeader = deliverable.group.leader.toString() === req.user._id.toString();
+    if (!isMember && !isLeader) {
       return res.status(403).json({ success: false, message: 'You are not in this group' });
     }
 
@@ -53,7 +55,12 @@ exports.submitDeliverable = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please upload a file or provide a document URL' });
     }
 
-    deliverable.status = 'submitted';
+    if (deliverable.dueDate && new Date() > new Date(deliverable.dueDate)) {
+      deliverable.status = 'late';
+    } else {
+      deliverable.status = 'submitted';
+    }
+
     deliverable.submittedAt = new Date();
     deliverable.submittedBy = req.user._id;
 
@@ -70,10 +77,14 @@ exports.submitDeliverable = async (req, res) => {
 exports.gradeDeliverable = async (req, res) => {
   try {
     const { grade, comments, attendance } = req.body;
-    const deliverable = await Deliverable.findById(req.params.id);
+    const deliverable = await Deliverable.findById(req.params.id).populate('group');
 
     if (!deliverable) {
       return res.status(404).json({ success: false, message: 'Deliverable not found' });
+    }
+
+    if (req.user.role === 'guide' && deliverable.group.guide?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not assigned to this group' });
     }
 
     // Assign grades and attendance

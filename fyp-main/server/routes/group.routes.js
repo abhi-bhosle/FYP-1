@@ -19,5 +19,6 @@ router.delete('/:id', groupController.deleteGroup);
 
 // Coordinator/Admin only
 router.post('/assign-guide', authorize('coordinator', 'admin'), groupController.assignGuide);
+router.post('/auto-assign', authorize('coordinator', 'admin'), groupController.autoAssignGroups);
 
 module.exports = router;

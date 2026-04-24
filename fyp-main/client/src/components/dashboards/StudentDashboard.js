@@ -98,25 +98,32 @@ const StudentDashboard = ({ stats }) => {
       <motion.div variants={fadeUp} custom={1} initial="hidden" animate="visible" className="bg-white/70 backdrop-blur-md border border-slate-200/60 rounded-2xl shadow-sm p-6">
         <h2 className="text-xl font-semibold mb-4 text-slate-800">Quick Links</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link to="/app/reports" className="flex items-center p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 transition border">
+          <Link to="/app/reports" className="flex items-center p-4 bg-slate-50 rounded-xl hover:bg-emerald-50 transition border relative">
             <Calendar className="w-5 h-5 text-emerald-600 mr-3" />
             <div>
               <p className="font-semibold text-slate-700">Deliverables & FTRs</p>
               <p className="text-sm text-slate-500">Check deadlines</p>
             </div>
+            {stats.pendingDeliverables > 0 && (
+              <span className="absolute top-3 right-3 bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                {stats.pendingDeliverables} pending
+              </span>
+            )}
           </Link>
-          <Link to="/app/projects" className="flex items-center p-4 bg-slate-50 rounded-xl hover:bg-indigo-50 transition border">
-            <FolderKanban className="w-5 h-5 text-indigo-600 mr-3" />
+          <Link to="/app/weekly-reports" className="flex items-center p-4 bg-slate-50 rounded-xl hover:bg-indigo-50 transition border relative">
+            <FileText className="w-5 h-5 text-indigo-600 mr-3" />
             <div>
-              <p className="font-semibold text-slate-700">Project Workspace</p>
-              <p className="text-sm text-slate-500">View status</p>
+              <p className="font-semibold text-slate-700">Weekly Reports</p>
+              <p className="text-sm text-slate-500">{stats.reportsSubmitted || 0} submitted</p>
             </div>
           </Link>
-          <Link to="/app/groups" className="flex items-center p-4 bg-slate-50 rounded-xl hover:bg-violet-50 transition border">
-            <Users className="w-5 h-5 text-violet-600 mr-3" />
+          <Link to="/app/evaluations" className="flex items-center p-4 bg-slate-50 rounded-xl hover:bg-violet-50 transition border relative">
+            <CheckCircle className="w-5 h-5 text-violet-600 mr-3" />
             <div>
-              <p className="font-semibold text-slate-700">Group Portal</p>
-              <p className="text-sm text-slate-500">View members</p>
+              <p className="font-semibold text-slate-700">Evaluations</p>
+              <p className="text-sm text-slate-500">
+                {stats.evaluations?.length > 0 ? `Latest: ${stats.evaluations[0].marksObtained}/${stats.evaluations[0].totalMarks}` : 'No evaluations yet'}
+              </p>
             </div>
           </Link>
         </div>

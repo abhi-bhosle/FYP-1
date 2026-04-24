@@ -25,15 +25,24 @@ exports.getDashboardStats = async (req, res) => {
         stats.recentActivity = [];
         
         if (group.project) {
-          stats.reportsSubmitted = 0;
-          stats.evaluations = [];
-          stats.pendingReviews = 0;
-          stats.averageGrade = 0;
+          const WeeklyReport = require('../models/WeeklyReport.model');
+          const Deliverable = require('../models/Deliverable.model');
+          const Evaluation = require('../models/Evaluation.model');
+          
+          stats.reportsSubmitted = await WeeklyReport.countDocuments({ project: group.project._id });
+          
+          stats.evaluations = await Evaluation.find({ group: group._id })
+            .sort({ date: -1 })
+            .limit(1);
+          
+          stats.pendingDeliverables = await Deliverable.countDocuments({ 
+            group: group._id,
+            status: { $in: ['pending', 'late'] }
+          });
         } else {
           stats.reportsSubmitted = 0;
           stats.evaluations = [];
-          stats.pendingReviews = 0;
-          stats.averageGrade = 0;
+          stats.pendingDeliverables = 0;
         }
       } else {
         // Student not in a group
@@ -54,17 +63,30 @@ exports.getDashboardStats = async (req, res) => {
       stats.activeProjects = projects.filter(p => p.proposalStatus === 'approved').length;
       stats.completedProjects = projects.filter(p => p.progressPercentage >= 100).length;
       
-      stats.pendingReports = 0;
+      // Get assigned groups
+      const assignedGroups = await Group.find({ guide: req.user._id })
+        .populate('members', 'name email')
+        .select('name members department year');
+      
+      const WeeklyReport = require('../models/WeeklyReport.model');
+      const Deliverable = require('../models/Deliverable.model');
+      
+      const groupIds = assignedGroups.map(g => g._id);
+      
+      stats.pendingReports = await WeeklyReport.countDocuments({ 
+        group: { $in: groupIds },
+        status: 'submitted' 
+      });
+      
+      stats.pendingDeliverables = await Deliverable.countDocuments({
+        group: { $in: groupIds },
+        status: 'submitted'
+      });
       
       stats.recentProjects = await Project.find({ guide: req.user._id })
         .populate('group', 'name members')
         .limit(5)
         .sort({ updatedAt: -1 });
-      
-      // Get assigned groups
-      const assignedGroups = await Group.find({ guide: req.user._id })
-        .populate('members', 'name email')
-        .select('name members department year');
       
       stats.assignedGroups = assignedGroups;
     } else if (['coordinator', 'admin'].includes(req.user.role)) {
@@ -237,7 +259,7 @@ exports.getProgressAnalytics = async (req, res) => {
       .populate('group', 'name members')
       .sort({ progressPercentage: -1 })
       .limit(10)
-      .select('title progressPercentage status group');
+      .select('title progressPercentage phase proposalStatus group');
 
     analytics.topPerformingTeams = topTeams.map(p => ({
       projectTitle: p.title,
@@ -254,7 +276,7 @@ exports.getProgressAnalytics = async (req, res) => {
     })
       .populate('group', 'name')
       .populate('guide', 'name')
-      .select('title expectedCompletionDate progressPercentage status group guide');
+      .select('title expectedCompletionDate progressPercentage phase proposalStatus group guide');
 
     analytics.overdueProjects = overdueProjects.map(p => ({
       id: p._id,
@@ -339,7 +361,7 @@ exports.getProgressAnalytics = async (req, res) => {
             totalProjects: { $sum: 1 },
             avgProgress: { $avg: '$progressPercentage' },
             completedProjects: {
-              $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] }
+              $sum: { $cond: [{ $eq: ['$phase', 'COMPLETED'] }, 1, 0] }
             }
           }
         },
@@ -363,7 +385,7 @@ exports.getProgressAnalytics = async (req, res) => {
       .populate('group', 'name')
       .sort({ updatedAt: -1 })
       .limit(5)
-      .select('title progressPercentage status updatedAt group');
+      .select('title progressPercentage phase proposalStatus updatedAt group');
 
     analytics.recentActivity = recentProjects.map(p => ({
       title: p.title,

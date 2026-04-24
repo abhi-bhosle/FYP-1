@@ -80,7 +80,8 @@ const GuideDashboard = ({ stats }) => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { to: '/app/reports', icon: FileText, label: 'Grade FTRs', sub: `${stats.pendingReports || 0} pending` },
+            { to: '/app/weekly-reports', icon: FileText, label: 'Review Weekly Reports', sub: `${stats.pendingReports || 0} pending` },
+            { to: '/app/reports', icon: CheckCircle, label: 'Grade Deliverables', sub: `${stats.pendingDeliverables || 0} pending` },
             { to: '/app/evaluations', icon: Award, label: 'Final Evaluations', sub: 'Semester marks' },
           ].map((action, i) => (
             <Link

@@ -20,6 +20,8 @@ import Users from './pages/Users';
 import Settings from './pages/Settings';
 import Schedule from './pages/Schedule';
 import Analytics from './pages/Analytics';
+import WeeklyReports from './pages/WeeklyReports';
+import AuditLogs from './pages/AuditLogs';
 
 // Layout
 import Layout from './components/Layout';
@@ -125,6 +127,7 @@ function AppRoutes() {
           <Route path="groups" element={<Groups />} />
           <Route path="groups/:id" element={<GroupDetails />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="weekly-reports" element={<WeeklyReports />} />
           <Route path="evaluations" element={<Evaluations />} />
           <Route path="profile" element={<Profile />} />
           <Route
@@ -132,6 +135,14 @@ function AppRoutes() {
             element={
               <ProtectedRoute roles={['admin', 'coordinator']}>
                 <Users />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="audit-logs"
+            element={
+              <ProtectedRoute roles={['admin', 'coordinator']}>
+                <AuditLogs />
               </ProtectedRoute>
             }
           />

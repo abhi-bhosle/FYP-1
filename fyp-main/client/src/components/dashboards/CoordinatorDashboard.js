@@ -144,11 +144,10 @@ const CoordinatorDashboard = ({ stats }) => {
                   <div className="w-full bg-slate-100 rounded-full h-2.5">
                     <div
                       className={`h-2.5 rounded-full transition-all ${
-                        item.status === 'completed' ? 'bg-emerald-400' :
-                        item.status === 'in_progress' ? 'bg-indigo-500' :
-                        item.status === 'proposed' ? 'bg-amber-400' :
-                        item.status === 'approved' ? 'bg-violet-500' :
-                        'bg-red-400'
+                        item.status === 'approved' ? 'bg-emerald-400' :
+                        item.status === 'pending' ? 'bg-amber-400' :
+                        item.status === 'rejected' ? 'bg-red-400' :
+                        'bg-slate-400'
                       }`}
                       style={{ width: `${stats.totalProjects > 0 ? (item.count / stats.totalProjects) * 100 : 0}%` }}
                     />

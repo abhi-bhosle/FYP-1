@@ -81,9 +81,11 @@ const Layout = () => {
     { name: 'Projects', href: '/app/projects', icon: FolderKanban, roles: ['student', 'guide', 'coordinator', 'admin'] },
     { name: 'Groups', href: '/app/groups', icon: Users, roles: ['student', 'guide', 'coordinator', 'admin'] },
     { name: 'Deliverables', href: '/app/reports', icon: FileText, roles: ['student', 'guide', 'coordinator', 'admin'] },
+    { name: 'Weekly Reports', href: '/app/weekly-reports', icon: FileText, roles: ['student', 'guide', 'coordinator', 'admin'] },
     { name: 'Evaluations', href: '/app/evaluations', icon: ClipboardCheck, roles: ['student', 'guide', 'coordinator', 'admin'] },
     { name: 'Settings', href: '/app/settings', icon: Settings, roles: ['student', 'guide', 'coordinator', 'admin'] },
     { name: 'Users', href: '/app/users', icon: Users, roles: ['coordinator', 'admin'] },
+    { name: 'Audit Logs', href: '/app/audit-logs', icon: ClipboardCheck, roles: ['coordinator', 'admin'] },
   ];
 
   const filteredNavigation = navigation.filter((item) =>

@@ -23,6 +23,9 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 const publicRoutes = require('./routes/public.routes');
 const meetingRoutes = require('./routes/meeting.routes');
 const deliverableRoutes = require('./routes/deliverable.routes');
+const auditLogRoutes = require('./routes/auditLog.routes');
+const weeklyReportRoutes = require('./routes/weeklyReport.routes');
+const aiRoutes = require('./routes/ai.routes');
 
 // Import socket handler
 const socketHandler = require('./socket/socketHandler');
@@ -74,6 +77,9 @@ app.use('/api/deliverables', deliverableRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/meetings', meetingRoutes);
+app.use('/api/audit-logs', auditLogRoutes);
+app.use('/api/weekly-reports', weeklyReportRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

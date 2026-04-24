@@ -610,3 +610,83 @@ exports.deleteGroup = async (req, res) => {
     });
   }
 };
+
+// Coordinator action to auto-assign students to groups
+exports.autoAssignGroups = async (req, res) => {
+  try {
+    const { maxMembers = 4 } = req.body;
+    
+    // Find students with no group
+    const students = await User.find({ role: 'student', isActive: true, group: null });
+    
+    if (students.length === 0) {
+      return res.status(200).json({ success: true, message: 'No students found without a group' });
+    }
+
+    // Group students by department and year
+    const stragglers = {};
+    students.forEach(student => {
+      const key = `${student.department}_${student.year}`;
+      if (!stragglers[key]) stragglers[key] = [];
+      stragglers[key].push(student);
+    });
+
+    const createdGroups = [];
+    const io = req.app.get('io');
+    const { logAction } = require('../utils/logger');
+
+    for (const key in stragglers) {
+      const list = stragglers[key];
+      const [dept, year] = key.split('_');
+
+      // Chunk into groups of maxMembers
+      for (let i = 0; i < list.length; i += maxMembers) {
+        const chunk = list.slice(i, i + maxMembers);
+        const memberIds = chunk.map(s => s._id);
+
+        const group = await Group.create({
+          name: `AutoGroup_${dept}_${year}_${Date.now()}_${i}`,
+          leader: memberIds[0],
+          members: memberIds,
+          maxMembers,
+          department: dept,
+          year: parseInt(year)
+        });
+
+        // Update users
+        await User.updateMany({ _id: { $in: memberIds } }, { group: group._id });
+        createdGroups.push(group);
+
+        // Log audit action
+        await logAction({
+          actor: req.user._id,
+          actorRole: req.user.role,
+          action: 'AUTO_ASSIGN_GROUP',
+          entityType: 'Group',
+          entityId: group._id,
+          description: `Auto-created group ${group.name} with ${chunk.length} members`
+        });
+
+        // Notify students
+        for (const member of chunk) {
+          await notifyUser(io, {
+            recipient: member._id,
+            type: 'group_invitation',
+            title: 'Auto-Assigned to Group',
+            message: `You have been automatically assigned to group "${group.name}".`,
+            relatedGroup: group._id
+          });
+        }
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully created ${createdGroups.length} groups for unassigned students`,
+      data: createdGroups
+    });
+  } catch (error) {
+    console.error('Auto assign groups error:', error);
+    res.status(500).json({ success: false, message: 'Failed to auto-assign groups' });
+  }
+};

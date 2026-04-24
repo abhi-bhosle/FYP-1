@@ -26,6 +26,13 @@ exports.createEvaluation = async (req, res) => {
       });
     }
 
+    if (req.user.role === 'guide' && group.guide?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not assigned to this group'
+      });
+    }
+
     // Calculate total scores
     const totalScore = criteria.reduce((sum, c) => sum + c.score, 0);
     const maxTotalScore = criteria.reduce((sum, c) => sum + c.maxScore, 0);

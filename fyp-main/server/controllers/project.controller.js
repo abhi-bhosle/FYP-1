@@ -91,8 +91,9 @@ exports.updateProposal = async (req, res) => {
     if (project.proposalStatus === 'rejected') {
       project.proposalStatus = 'pending';
       project.rejectionReason = undefined;
+      project.resubmittedAt = new Date();
 
-      // Re-link group to project (in case it was cleared on rejection)
+      // Re-link group to project (in case it was cleared on rejection previously)
       if (!group.project) {
         group.project = project._id;
         await group.save();
@@ -190,12 +191,11 @@ exports.rejectProjectProposal = async (req, res) => {
     project.rejectionReason = reason;
     await project.save();
 
-    // Clear the group's project reference so the leader can resubmit a new/revised proposal
-    const group = await Group.findById(project.group._id || project.group);
-    if (group) {
-      group.project = null;
-      await group.save();
-    }
+    // We DO NOT clear the group's project reference here
+    // The group remains linked to the rejected project so the leader can view the reason and resubmit
+    // Update timestamps
+    project.updatedAt = new Date();
+    await project.save();
 
     // Notify ONLY the group leader with the full rejection reason
     const io = req.app.get('io');
